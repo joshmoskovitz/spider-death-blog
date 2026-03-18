@@ -21,6 +21,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from costs import TrackedClient
+
 PROJECT_DIR = Path(__file__).parent
 load_dotenv(PROJECT_DIR / ".env")
 
@@ -249,7 +251,6 @@ def print_review(image_path, reviews):
 
 def review_images(image_paths):
     """Review multiple images with all four critics in parallel."""
-    from costs import TrackedClient
     client = TrackedClient()
     style_bible = load_style_bible()
 

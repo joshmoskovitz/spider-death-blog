@@ -19,6 +19,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from costs import TrackedClient
+
 PROJECT_DIR = Path(__file__).parent
 load_dotenv(PROJECT_DIR / ".env")
 ARCHIVE_PATH = PROJECT_DIR / "archive" / "posts.json"
@@ -78,7 +80,6 @@ def generate_batch(count):
     style_bible = load_style_bible()
     task_prompt = build_task_prompt(archive, count)
 
-    from costs import TrackedClient
     client = TrackedClient()
     message = client.messages.create(
         model="claude-sonnet-4-6",

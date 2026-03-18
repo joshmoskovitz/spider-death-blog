@@ -12,6 +12,7 @@ Budget limits are configured via environment variables:
 
 import json
 import os
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,6 +39,12 @@ class BudgetExceededError(Exception):
 
 def _estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     """Calculate estimated cost in dollars for a single API call."""
+    if model not in PRICE_TABLE:
+        print(
+            f"[costs] WARNING: unknown model '{model}', using fallback pricing. "
+            f"Update PRICE_TABLE in costs.py.",
+            file=sys.stderr,
+        )
     input_rate, output_rate = PRICE_TABLE.get(model, _DEFAULT_PRICE)
     return (input_tokens * input_rate + output_tokens * output_rate) / 1_000_000
 
@@ -76,21 +83,29 @@ def monthly_total() -> float:
 
 
 def _check_budget():
-    """Raise BudgetExceededError if a spending cap has been reached."""
+    """Raise BudgetExceededError if a spending cap has been reached.
+
+    NOTE: There is an inherent TOCTOU race here — two concurrent requests
+    could both pass the check, both make API calls, and both log costs,
+    overshooting the budget. For a single-server side project this is an
+    acceptable tradeoff; the budget is a guardrail, not a hard guarantee.
+    """
     daily_limit = os.environ.get("DAILY_BUDGET")
     if daily_limit:
-        if daily_total() >= float(daily_limit):
+        spent = daily_total()
+        if spent >= float(daily_limit):
             raise BudgetExceededError(
                 f"Daily budget of ${daily_limit} reached. "
-                f"Spent ${daily_total():.2f} today."
+                f"Spent ${spent:.2f} today."
             )
 
     monthly_limit = os.environ.get("MONTHLY_BUDGET")
     if monthly_limit:
-        if monthly_total() >= float(monthly_limit):
+        spent = monthly_total()
+        if spent >= float(monthly_limit):
             raise BudgetExceededError(
                 f"Monthly budget of ${monthly_limit} reached. "
-                f"Spent ${monthly_total():.2f} this month."
+                f"Spent ${spent:.2f} this month."
             )
 
 

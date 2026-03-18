@@ -199,10 +199,11 @@ async def create_spider_death(req: CreateRequest, request: Request):
     # Step 1: Generate the post concept
     try:
         concept = generate_post_concept(req.phrase, client)
-    except BudgetExceededError:
+    except BudgetExceededError as e:
+        print(f"[BUDGET] {e}", flush=True)
         return JSONResponse(
             status_code=503,
-            content={"error": "Spidey's on a budget today. Try again tomorrow!"},
+            content={"error": "Spidey's on a budget today. Try again later!"},
         )
     except Exception as e:
         print(f"[ERROR] Concept generation failed: {e}", flush=True)
@@ -214,10 +215,11 @@ async def create_spider_death(req: CreateRequest, request: Request):
     # Step 2: Render the illustration
     try:
         img, _code = render_from_description(concept["scene_description"], client)
-    except BudgetExceededError:
+    except BudgetExceededError as e:
+        print(f"[BUDGET] {e}", flush=True)
         return JSONResponse(
             status_code=503,
-            content={"error": "Spidey's on a budget today. Try again tomorrow!"},
+            content={"error": "Spidey's on a budget today. Try again later!"},
         )
     except Exception as e:
         print(f"[ERROR] Rendering failed: {e}", flush=True)

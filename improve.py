@@ -28,6 +28,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from costs import TrackedClient
+
 PROJECT_DIR = Path(__file__).parent
 load_dotenv(PROJECT_DIR / ".env")
 
@@ -734,7 +736,6 @@ def main():
     with open(args.batch_file) as f:
         posts = json.load(f)
 
-    from costs import TrackedClient
     client = TrackedClient()
 
     if args.index is not None:
