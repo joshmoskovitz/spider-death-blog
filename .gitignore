@@ -12,3 +12,9 @@ drafts/versions/
 # Cost and pipeline logs
 costs.jsonl
 daily_log.jsonl
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
