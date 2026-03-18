@@ -1,1 +1,14 @@
 .env
+__pycache__/
+*.pyc
+
+# Generated outputs
+site/
+drafts/versions/
+
+# SQLite databases (runtime state)
+*.db
+
+# Cost and pipeline logs
+costs.jsonl
+daily_log.jsonl
