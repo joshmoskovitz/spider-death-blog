@@ -128,12 +128,16 @@ class CommunityDB:
 
     def vote(self, entry_id: str, direction: str) -> Optional[dict]:
         """Vote on an entry. Returns updated vote counts or None if not found."""
-        column = "upvotes" if direction == "up" else "downvotes"
+        if direction not in ("up", "down"):
+            raise ValueError(f"Invalid vote direction: {direction!r} (expected 'up' or 'down')")
+        # Use separate SQL statements rather than f-string interpolation to
+        # avoid any coupling between the validation above and SQL safety.
+        if direction == "up":
+            sql = "UPDATE entries SET upvotes = upvotes + 1 WHERE id = ?"
+        else:
+            sql = "UPDATE entries SET downvotes = downvotes + 1 WHERE id = ?"
         with self._connect() as conn:
-            conn.execute(
-                f"UPDATE entries SET {column} = {column} + 1 WHERE id = ?",
-                (entry_id,),
-            )
+            conn.execute(sql, (entry_id,))
             conn.row_factory = sqlite3.Row
             row = conn.execute(
                 "SELECT upvotes, downvotes FROM entries WHERE id = ?",

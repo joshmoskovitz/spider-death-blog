@@ -98,6 +98,12 @@ class TestVoting:
         result = db.vote("nonexistent-id-12345", "up")
         assert result is None
 
+    def test_invalid_vote_direction_raises(self, db):
+        """Passing anything other than 'up' or 'down' should raise ValueError."""
+        result = _submit_entry(db)
+        with pytest.raises(ValueError, match="Invalid vote direction"):
+            db.vote(result["id"], "sideways")
+
     def test_top_entries_ranked_by_score(self, db):
         """Entries should be sorted by (upvotes - downvotes) descending."""
         r1 = _submit_entry(db, phrase="low scorer")
@@ -134,8 +140,20 @@ class TestImageSizeLimit:
 class TestEntryCap:
     def test_prunes_oldest_beyond_cap(self, db, monkeypatch):
         """When more than MAX_ENTRIES are submitted, the oldest should be pruned."""
+        from datetime import datetime as real_datetime
         # Use a small cap for testing
         monkeypatch.setattr("community_db.MAX_ENTRIES", 5)
+
+        # Deterministic timestamps so ordering is guaranteed without sleeps
+        call_count = 0
+        base = real_datetime(2026, 1, 1)
+        def _advancing_now():
+            nonlocal call_count
+            call_count += 1
+            return base.replace(second=call_count)
+        monkeypatch.setattr("community_db.datetime", type("FakeDatetime", (), {
+            "now": staticmethod(_advancing_now),
+        }))
 
         ids = []
         for i in range(7):
@@ -160,8 +178,10 @@ class TestEntryCap:
 
 
 class TestJsonMigration:
-    def test_migrates_legacy_json_on_first_run(self, tmp_path):
+    def test_migrates_legacy_json_on_first_run(self, tmp_path, monkeypatch):
         """If community_board.json exists, its entries should be imported."""
+        import community_db
+
         legacy_data = [
             {
                 "id": "legacy-001",
@@ -176,27 +196,23 @@ class TestJsonMigration:
             }
         ]
 
-        import community_db
         legacy_path = tmp_path / "community_board.json"
         with open(legacy_path, "w") as f:
             json.dump(legacy_data, f)
 
-        # Temporarily point LEGACY_JSON to our test file
-        original_path = community_db.LEGACY_JSON
-        community_db.LEGACY_JSON = legacy_path
-        try:
-            db = CommunityDB(db_path=str(tmp_path / "test_migrate.db"))
-            entries = db.top_entries()
-            assert len(entries) == 1
-            assert entries[0]["id"] == "legacy-001"
-            assert entries[0]["phrase"] == "spider in microwave"
-            assert entries[0]["upvotes"] == 5
-            assert entries[0]["downvotes"] == 1
-        finally:
-            community_db.LEGACY_JSON = original_path
+        monkeypatch.setattr(community_db, "LEGACY_JSON", legacy_path)
+        db = CommunityDB(db_path=str(tmp_path / "test_migrate.db"))
+        entries = db.top_entries()
+        assert len(entries) == 1
+        assert entries[0]["id"] == "legacy-001"
+        assert entries[0]["phrase"] == "spider in microwave"
+        assert entries[0]["upvotes"] == 5
+        assert entries[0]["downvotes"] == 1
 
-    def test_does_not_re_migrate_if_db_has_entries(self, tmp_path):
+    def test_does_not_re_migrate_if_db_has_entries(self, tmp_path, monkeypatch):
         """Migration should only happen when the DB is empty."""
+        import community_db
+
         legacy_data = [
             {
                 "id": "legacy-001",
@@ -211,29 +227,25 @@ class TestJsonMigration:
             }
         ]
 
-        import community_db
         legacy_path = tmp_path / "community_board.json"
         with open(legacy_path, "w") as f:
             json.dump(legacy_data, f)
 
         db_path = str(tmp_path / "test_no_remigrate.db")
 
-        original_path = community_db.LEGACY_JSON
-        community_db.LEGACY_JSON = legacy_path
-        try:
-            # First init — should migrate
-            db1 = CommunityDB(db_path=db_path)
-            assert len(db1.top_entries()) == 1
+        monkeypatch.setattr(community_db, "LEGACY_JSON", legacy_path)
 
-            # Add another entry directly
-            db1.submit(
-                phrase="new entry",
-                intro="x", caption="x", hashtags="x", image_base64="x",
-            )
-            assert len(db1.top_entries()) == 2
+        # First init — should migrate
+        db1 = CommunityDB(db_path=db_path)
+        assert len(db1.top_entries()) == 1
 
-            # Second init — should NOT re-migrate (DB already has entries)
-            db2 = CommunityDB(db_path=db_path)
-            assert len(db2.top_entries()) == 2  # not 3
-        finally:
-            community_db.LEGACY_JSON = original_path
+        # Add another entry directly
+        db1.submit(
+            phrase="new entry",
+            intro="x", caption="x", hashtags="x", image_base64="x",
+        )
+        assert len(db1.top_entries()) == 2
+
+        # Second init — should NOT re-migrate (DB already has entries)
+        db2 = CommunityDB(db_path=db_path)
+        assert len(db2.top_entries()) == 2  # not 3

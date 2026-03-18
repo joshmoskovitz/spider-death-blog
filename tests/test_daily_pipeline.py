@@ -26,6 +26,20 @@ import costs
 import daily_pipeline
 
 
+def _write_cost_entry(log_path, timestamp, cost_usd):
+    """Write a complete cost log entry matching the production schema."""
+    entry = {
+        "timestamp": timestamp,
+        "datetime": "2026-03-18T12:00:00+00:00",
+        "model": "claude-sonnet-4-6",
+        "input_tokens": 1000,
+        "output_tokens": 100,
+        "cost_usd": cost_usd,
+    }
+    with open(log_path, "a") as f:
+        f.write(json.dumps(entry) + "\n")
+
+
 @pytest.fixture(autouse=True)
 def isolated_paths(tmp_path, monkeypatch):
     """Redirect all file paths to temp directories."""
@@ -147,34 +161,22 @@ class TestCheckBudget:
 
     def test_passes_when_under_daily_limit(self, isolated_paths, monkeypatch):
         monkeypatch.setenv("DAILY_BUDGET", "10.00")
-        now = time.time()
         # Spend $1 today — well under 90% of $10
-        log_path = isolated_paths / "costs.jsonl"
-        entry = {"timestamp": now - 10, "cost_usd": 1.00}
-        with open(log_path, "a") as f:
-            f.write(json.dumps(entry) + "\n")
+        _write_cost_entry(isolated_paths / "costs.jsonl", time.time() - 10, 1.00)
 
         daily_pipeline.check_budget()  # should not raise
 
     def test_aborts_at_90_percent_of_daily_limit(self, isolated_paths, monkeypatch):
         monkeypatch.setenv("DAILY_BUDGET", "10.00")
-        now = time.time()
         # Spend $9.50 today — over 90% threshold
-        log_path = isolated_paths / "costs.jsonl"
-        entry = {"timestamp": now - 10, "cost_usd": 9.50}
-        with open(log_path, "a") as f:
-            f.write(json.dumps(entry) + "\n")
+        _write_cost_entry(isolated_paths / "costs.jsonl", time.time() - 10, 9.50)
 
         with pytest.raises(RuntimeError, match="Near daily budget"):
             daily_pipeline.check_budget()
 
     def test_aborts_at_90_percent_of_monthly_limit(self, isolated_paths, monkeypatch):
         monkeypatch.setenv("MONTHLY_BUDGET", "50.00")
-        now = time.time()
-        log_path = isolated_paths / "costs.jsonl"
-        entry = {"timestamp": now - 10, "cost_usd": 46.00}
-        with open(log_path, "a") as f:
-            f.write(json.dumps(entry) + "\n")
+        _write_cost_entry(isolated_paths / "costs.jsonl", time.time() - 10, 46.00)
 
         with pytest.raises(RuntimeError, match="Near monthly budget"):
             daily_pipeline.check_budget()

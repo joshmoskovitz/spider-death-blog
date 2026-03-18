@@ -111,8 +111,8 @@ class TestLoadCostsSince:
         total = costs._load_costs_since(now - 60)
         assert total == pytest.approx(5.00)
 
-    def test_stops_at_older_entries(self, isolated_costs_log):
-        """Verify the reverse-scan optimization terminates early."""
+    def test_excludes_entries_before_cutoff(self, isolated_costs_log):
+        """Only entries after the cutoff timestamp should be summed."""
         now = time.time()
         # Write 100 old entries, then 2 recent ones
         for i in range(100):
@@ -254,12 +254,14 @@ class TestTrackedMessages:
         mock_messages.create.assert_called_once_with(
             model="claude-sonnet-4-6", max_tokens=100
         )
-        # Verify a log entry was written
+        # Verify a log entry was written with all expected fields
         with open(isolated_costs_log) as f:
             entry = json.loads(f.readline())
         assert entry["model"] == "claude-sonnet-4-6"
         assert entry["input_tokens"] == 500
         assert entry["output_tokens"] == 100
+        expected_cost = (500 * 3.00 + 100 * 15.00) / 1_000_000
+        assert entry["cost_usd"] == pytest.approx(expected_cost)
 
     def test_create_checks_budget_before_calling(self, isolated_costs_log, monkeypatch):
         """Verify budget is checked before the API call is made."""
