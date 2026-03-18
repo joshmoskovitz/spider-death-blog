@@ -50,21 +50,33 @@ def _estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
 
 
 def _load_costs_since(since_timestamp: float) -> float:
-    """Sum all costs from the log file since a given Unix timestamp."""
+    """Sum all costs from the log file since a given Unix timestamp.
+
+    Reads the file in reverse so we can stop as soon as we hit entries
+    older than our cutoff, avoiding a full scan of the entire history.
+    """
     total = 0.0
     if not COSTS_LOG.exists():
         return total
+
+    # Read all lines, then iterate in reverse (entries are chronological)
     with open(COSTS_LOG) as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                entry = json.loads(line)
-                if entry.get("timestamp", 0) >= since_timestamp:
-                    total += entry.get("cost_usd", 0)
-            except json.JSONDecodeError:
-                continue
+        lines = f.readlines()
+
+    for line in reversed(lines):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+            ts = entry.get("timestamp", 0)
+            if ts >= since_timestamp:
+                total += entry.get("cost_usd", 0)
+            else:
+                # Entries are chronological — no older entries will match
+                break
+        except json.JSONDecodeError:
+            continue
     return total
 
 
@@ -124,7 +136,12 @@ def _log_call(model: str, input_tokens: int, output_tokens: int, cost: float):
 
 
 class _TrackedMessages:
-    """Wraps client.messages to intercept create() calls."""
+    """Wraps client.messages to intercept create() calls.
+
+    Only create() is explicitly wrapped for cost tracking. All other
+    methods (stream, count_tokens, etc.) are passed through to the
+    underlying messages resource unchanged.
+    """
 
     def __init__(self, messages):
         self._messages = messages
@@ -140,6 +157,9 @@ class _TrackedMessages:
         _log_call(model, input_tokens, output_tokens, cost)
 
         return response
+
+    def __getattr__(self, name):
+        return getattr(self._messages, name)
 
 
 class TrackedClient:
