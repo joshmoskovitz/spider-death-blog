@@ -1,0 +1,101 @@
+[
+  {
+    "id": 1,
+    "date": "2012-02-14",
+    "setting": "sky",
+    "mechanism": "suffocate",
+    "main_prop": "helium balloons",
+    "caption": "I tied helium balloons to his legs until he floated up into outer space and ran out of oxygen.",
+    "hashtags": "#balloons #oxygen #spider death",
+    "image": "09_balloons.jpg",
+    "hidden_touch": "smiley sun"
+  },
+  {
+    "id": 2,
+    "date": "2012-02-14",
+    "setting": "home",
+    "mechanism": "poison",
+    "main_prop": "chocolate box",
+    "caption": "I gifted him poisoned Valentine's day treats.",
+    "hashtags": "#valentines #chocolate #poison #spider death",
+    "image": "08_valentines.jpg",
+    "hidden_touch": "Happy Valentine's Day text, heart on chocolate box"
+  },
+  {
+    "id": 3,
+    "date": "2012-02-15",
+    "setting": "volcano",
+    "mechanism": "melt",
+    "main_prop": "volcano",
+    "caption": "I flung him into an active volcano.",
+    "hashtags": "#volcano #lava #melt #spider death",
+    "image": "07_volcano.jpg",
+    "hidden_touch": "debris flying, motion lines on spider"
+  },
+  {
+    "id": 4,
+    "date": "2012-02-16",
+    "setting": "bathroom",
+    "mechanism": "electrocute",
+    "main_prop": "toaster",
+    "caption": "I threw a toaster into the tub while he bathed.",
+    "hashtags": "#bath #tub #toaster #electrocute #spider death",
+    "image": "06_bathtub.jpg",
+    "hidden_touch": "framed 'Home is where the heart is' spider web art, rubber duck, checkered floor"
+  },
+  {
+    "id": 5,
+    "date": "2012-02-17",
+    "setting": "kitchen",
+    "mechanism": "bake",
+    "main_prop": "oven",
+    "caption": "I stuck him into a hot oven.",
+    "hashtags": "#dinner #oven #heat #spider death",
+    "image": "05_oven.jpg",
+    "hidden_touch": "painting of happy spider on wall, spider on serving plate on counter"
+  },
+  {
+    "id": 6,
+    "date": "2012-02-20",
+    "setting": "Washington DC",
+    "mechanism": "drown",
+    "main_prop": "reflecting pool",
+    "caption": "I drowned him in the reflecting pool in front of the Washington Monument.",
+    "hashtags": "#presidents day #reflecting pool #spider death",
+    "image": "04_reflecting_pool.jpg",
+    "hidden_touch": "spider wearing tiny Uncle Sam hat, spray-paint trees/clouds"
+  },
+  {
+    "id": 7,
+    "date": "2012-02-21",
+    "setting": "island",
+    "mechanism": "starve",
+    "main_prop": "desert island",
+    "caption": "I abandoned him on an island and left him to shrivel up and starve.",
+    "hashtags": "#island #castaway #starve #spider death",
+    "image": "03_island.jpg",
+    "hidden_touch": "smiley sun, seagulls, tiny drink with straw on island"
+  },
+  {
+    "id": 8,
+    "date": "2012-02-22",
+    "setting": "freezer",
+    "mechanism": "freeze",
+    "main_prop": "ice cube",
+    "caption": "I stuck him in the freezer and froze him in an ice cube.",
+    "hashtags": "#freezer #frozen #ice cube #spider death",
+    "image": "02_freezer.jpg",
+    "hidden_touch": "ice cream tub, steak, bag of frozen veggies, 'More Veggies' bag"
+  },
+  {
+    "id": 9,
+    "date": "2012-02-29",
+    "setting": "garden",
+    "mechanism": "beanstalk",
+    "main_prop": "magic beans",
+    "caption": "I planted bean seeds in his head and watered them until they sprouted a giant bean stalk from the top of his head. He would later die from complications due to a giant beanstalk growing form the top of his head.",
+    "hashtags": "#magic beans #water beans #top of head #giant beanstalk #complications #spider death",
+    "image": "01_beanstalk.jpg",
+    "hidden_touch": "tree with hole, flowers, speckled grass"
+  }
+]

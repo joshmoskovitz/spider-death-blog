@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#7: Island - Spider Death Blog</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: "Lucida Console", "Courier New", monospace;
+    background: #fff;
+    color: #333;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 10px 20px;
+}
+
+/* Header */
+#header {
+    text-align: center;
+    padding: 15px 0 5px;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+#header h1 {
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+#header h1 a {
+    color: #333;
+    text-decoration: none;
+}
+#header .tagline {
+    font-size: 11px;
+    color: #888;
+    font-style: italic;
+}
+
+/* Top nav links */
+#topnav {
+    text-align: center;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+#topnav a {
+    color: #666;
+    text-decoration: none;
+    margin: 0 12px;
+}
+#topnav a:hover { color: #000; text-decoration: underline; }
+
+/* Comic display */
+#comic {
+    text-align: center;
+    padding: 10px 0;
+}
+#comic .intro {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 12px;
+    font-style: italic;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+}
+#comic img {
+    max-width: 100%;
+    border: 1px solid #ddd;
+    image-rendering: pixelated;
+}
+#comic .caption {
+    font-size: 14px;
+    color: #333;
+    margin-top: 12px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+}
+#comic .hashtags {
+    font-size: 11px;
+    color: #999;
+    margin-top: 6px;
+}
+#comic .date {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 4px;
+}
+#comic .post-number {
+    font-size: 11px;
+    color: #bbb;
+    margin-top: 2px;
+}
+
+/* Comic navigation */
+#comicnav {
+    text-align: center;
+    padding: 12px 0;
+    font-size: 14px;
+}
+#comicnav a, #comicnav span {
+    display: inline-block;
+    margin: 0 8px;
+    padding: 4px 12px;
+    border: 1px solid #ccc;
+    color: #666;
+    text-decoration: none;
+    min-width: 70px;
+}
+#comicnav a:hover {
+    background: #f0f0f0;
+    color: #000;
+}
+#comicnav span.disabled {
+    color: #ccc;
+    border-color: #eee;
+}
+
+/* Archive page */
+#archive {
+    padding: 10px 0;
+}
+#archive h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+#archive .era-label {
+    font-size: 13px;
+    color: #999;
+    margin: 15px 0 5px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 3px;
+}
+#archive ul {
+    list-style: none;
+    padding: 0;
+}
+#archive li {
+    padding: 3px 0;
+    font-size: 13px;
+}
+#archive li a {
+    color: #336;
+    text-decoration: none;
+}
+#archive li a:hover { text-decoration: underline; }
+#archive li .archive-date {
+    color: #999;
+    font-size: 11px;
+    margin-left: 8px;
+}
+
+/* About page */
+#about {
+    padding: 10px 0;
+    line-height: 1.7;
+    font-size: 13px;
+}
+#about h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+/* Footer */
+#footer {
+    text-align: center;
+    padding: 15px 0;
+    margin-top: 20px;
+    border-top: 1px solid #ccc;
+    font-size: 10px;
+    color: #aaa;
+}
+</style>
+<link rel="icon" href="/images/favicon.png" type="image/png">
+</head>
+<body>
+
+<div id="header">
+  <h1><a href="/">Spider Death Blog</a></h1>
+  <div class="tagline">a small spider who dies in whimsical, theatrical ways</div>
+</div>
+
+<div id="topnav">
+  <a href="/archive/">Archive</a>
+  <a href="/create/">Create</a>
+  <a href="/community/">Community</a>
+  <a href="/about/">About</a>
+</div>
+
+
+<div id="comicnav" data-total="14">
+  <a href="/1/">&lt;&lt; First</a> <a href="/6/">&lt; Prev</a> <a href="#" onclick="goToRandom(); return false;">Random</a> <a href="/8/">Next &gt;</a> <a href="/14/">Last &gt;&gt;</a>
+</div>
+
+<div id="comic">
+  
+  <img src="/images/03_island.jpg" alt="Island" title="smiley sun, seagulls, tiny drink with straw on island">
+  <div class="caption">I abandoned him on an island and left him to shrivel up and starve.</div>
+  <div class="hashtags">#island #castaway #starve #spider death</div>
+  <div class="date">February 21, 2012</div>
+  <div class="post-number">#7</div>
+</div>
+
+<div id="comicnav" data-total="14">
+  <a href="/1/">&lt;&lt; First</a> <a href="/6/">&lt; Prev</a> <a href="#" onclick="goToRandom(); return false;">Random</a> <a href="/8/">Next &gt;</a> <a href="/14/">Last &gt;&gt;</a>
+</div>
+
+
+<div id="footer">
+  Spider Death Blog &middot; Est. 2012 &middot; Powered by MS Paint and cruelty<br>
+  Best viewed with 8 legs or fewer
+</div>
+
+<script>
+function goToRandom() {
+    var total = document.getElementById('comicnav').dataset.total;
+    var num = Math.floor(Math.random() * total) + 1;
+    window.location.href = '/' + num + '/';
+}
+</script>
+</body>
+</html>

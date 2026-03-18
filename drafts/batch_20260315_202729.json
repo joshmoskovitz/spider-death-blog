@@ -1,0 +1,47 @@
+[
+  {
+    "setting": "laundromat",
+    "mechanism": "tumble dry",
+    "main_prop": "industrial dryer",
+    "caption": "I put him in the dryer on high heat and ran a full cycle.",
+    "hashtags": "#laundromat #dryer #tumble #spin #spider death",
+    "hidden_touch": "a sock with a smiley face visible through the dryer window, a hand-lettered sign on the wall that says 'NO SPIDERS'",
+    "scene_description": "A gray oval spider with stick legs is visible through the round porthole window of a large orange dryer, tumbling mid-spin with socks and a shirt. The dryer dial is turned all the way to HIGH. Bright flat colors, white linoleum floor with a mop bucket in the corner."
+  },
+  {
+    "setting": "post office",
+    "mechanism": "mailed",
+    "main_prop": "cardboard box",
+    "caption": "I packed him into a small cardboard box with no air holes and mailed him to the wrong address.",
+    "hashtags": "#post office #box #mail #no air #spider death",
+    "hidden_touch": "the shipping label reads 'NOWHERE, NV', a tiny postal worker waves cheerfully from behind the counter",
+    "scene_description": "A small sealed brown cardboard box sits on a post office counter with a red stamp that says FRAGILE. The spider's two dot eyes are barely visible through a small gap in the flap. A postal worker in a blue uniform stands behind the counter smiling. Flat bright colors, MS Paint aesthetic."
+  },
+  {
+    "setting": "circus",
+    "mechanism": "cannonball",
+    "main_prop": "cannon",
+    "caption": "I loaded him into a cannon and fired him into the far wall of the tent.",
+    "hashtags": "#circus #cannon #fire #wall #spider death",
+    "hidden_touch": "a tiny crowd of stick figure spectators with O-shaped mouths, a banner above the cannon that reads 'THE AMAZING SPIDEY'",
+    "scene_description": "A large red and yellow striped circus cannon points toward a brick wall inside a big top tent. The spider is shown as a small gray oval mid-flight, legs trailing behind him, heading directly into the wall. A puff of smoke comes from the cannon barrel. Spray-paint tool used for the crowd and tent stripes."
+  },
+  {
+    "setting": "dentist office",
+    "mechanism": "nitrous oxide",
+    "main_prop": "gas mask",
+    "caption": "I put him under with laughing gas at the dentist and never turned it off.",
+    "hashtags": "#dentist #gas mask #nitrous #laughing gas #spider death",
+    "hidden_touch": "a framed poster of a smiling tooth on the wall, the spider is wearing a tiny paper bib that says 'PATIENT'",
+    "scene_description": "The spider reclines in an oversized teal dentist chair, a small gray rubber gas mask covering his face. His legs hang limply off the sides of the chair. A tank labeled N2O sits beside the chair with the valve wide open. A small framed tooth poster hangs on a pale yellow wall. Flat MS Paint colors."
+  },
+  {
+    "setting": "construction site",
+    "mechanism": "cement",
+    "main_prop": "cement mixer",
+    "caption": "I tipped him into a running cement mixer and poured him into a sidewalk.",
+    "hashtags": "#construction #cement #mixer #sidewalk #spider death",
+    "hidden_touch": "a tiny hardhat sitting beside the mixer, a freshly poured sidewalk square with eight small leg-prints visible in the wet cement",
+    "scene_description": "A large yellow cement mixer churns in the center of a construction site with dirt ground and an orange traffic cone nearby. The spider is mid-fall, tumbling into the open drum with wide dot eyes. In the foreground a freshly poured gray sidewalk square shows faint leg-shaped impressions. Bright flat colors, MS Paint aesthetic."
+  }
+]
