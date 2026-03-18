@@ -277,7 +277,10 @@ Write a COMPLETE NEW VERSION of this function. Reimagine the composition to addr
 recurring critic issues. The death premise must be instantly clear. Every detail must be readable.
 Output ONLY the Python function."""})
 
-    system = ART_DIRECTOR_SYSTEM.replace("{style_bible}", style_bible).replace("{func_name}", func_name)
+    system = [
+        {"type": "text", "text": style_bible, "cache_control": {"type": "ephemeral"}},
+        {"type": "text", "text": ART_DIRECTOR_SYSTEM.replace("{style_bible}", "").replace("{func_name}", func_name)},
+    ]
 
     msg = client.messages.create(
         model="claude-sonnet-4-6",
@@ -403,7 +406,10 @@ def validate_function_code(code, func_name):
 
 def generate_new_scene(client, func_name, post_data, style_bible, max_attempts=2):
     """Art director creates a brand new scene function from post data."""
-    system = SCENE_CREATOR_SYSTEM.replace("{style_bible}", style_bible).replace("{func_name}", func_name)
+    system = [
+        {"type": "text", "text": style_bible, "cache_control": {"type": "ephemeral"}},
+        {"type": "text", "text": SCENE_CREATOR_SYSTEM.replace("{style_bible}", "").replace("{func_name}", func_name)},
+    ]
 
     user_msg = f"""Create a scene rendering function for this Spider Death Blog post.
 

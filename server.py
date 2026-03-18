@@ -121,9 +121,7 @@ def _load_style_bible() -> str:
 CONCEPT_SYSTEM_PROMPT = """\
 You generate Spider Death Blog post concepts. The user gives you a short phrase \
 describing how they want the spider to die. You produce a complete post in the \
-blog's house style.
-
-{style_bible}
+blog's house style (see the style bible above).
 
 CONTENT POLICY:
 - Keep deaths WHIMSICAL and THEATRICAL — cartoonish, never graphic or gory.
@@ -144,15 +142,17 @@ Return ONLY a JSON object (no markdown fences) with these fields:
 """
 
 
-def generate_post_concept(phrase: str, client: anthropic.Anthropic) -> dict:
+def generate_post_concept(phrase: str, client) -> dict:
     """Generate a full post concept from a user's phrase."""
     style_bible = _load_style_bible()
-    system = CONCEPT_SYSTEM_PROMPT.format(style_bible=style_bible)
 
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=1024,
-        system=system,
+        system=[
+            {"type": "text", "text": style_bible, "cache_control": {"type": "ephemeral"}},
+            {"type": "text", "text": CONCEPT_SYSTEM_PROMPT.replace("{style_bible}", "")},
+        ],
         messages=[{
             "role": "user",
             "content": f"Create a Spider Death Blog post where the spider dies by: {phrase}",

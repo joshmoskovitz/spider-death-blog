@@ -147,7 +147,10 @@ POST CONTEXT:
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=800,
-        system=f"{critic['system']}\n\nSTYLE BIBLE:\n{style_bible}",
+        system=[
+            {"type": "text", "text": style_bible, "cache_control": {"type": "ephemeral"}},
+            {"type": "text", "text": critic["system"]},
+        ],
         messages=[{
             "role": "user",
             "content": [
