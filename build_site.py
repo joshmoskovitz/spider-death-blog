@@ -23,6 +23,8 @@ ARCHIVE_PATH = PROJECT_DIR / "archive" / "posts.json"
 ARCHIVE_IMAGES = PROJECT_DIR / "archive" / "images"
 DRAFTS_DIR = PROJECT_DIR / "drafts"
 
+API_URL = os.environ.get("API_URL", "http://localhost:8888")
+
 
 def load_all_posts():
     """Load archive posts + new drafts into a unified numbered list."""
@@ -515,7 +517,7 @@ def render_create_page():
 </style>
 
 <script>
-var API_URL = 'http://localhost:8888';
+var API_URL = '{api_url}';
 var animFrameId = null;
 var lastResult = null;
 var lastPhrase = null;
@@ -893,7 +895,7 @@ function addToCommunityBoard() {
 }
 </script>
 """
-    return render_page("Create Your Own", body)
+    return render_page("Create Your Own", body.replace("{api_url}", API_URL))
 
 
 def render_community_page():
@@ -1005,7 +1007,7 @@ def render_community_page():
 </style>
 
 <script>
-var API_URL = 'http://localhost:8888';
+var API_URL = '{api_url}';
 
 function loadBoard() {
   fetch(API_URL + '/api/community/board')
@@ -1109,7 +1111,7 @@ document.addEventListener('keydown', function(e) {
 loadBoard();
 </script>
 """
-    return render_page("Community Board", body)
+    return render_page("Community Board", body.replace("{api_url}", API_URL))
 
 
 def render_index_redirect(total):
@@ -1191,6 +1193,10 @@ def build_site():
     print(f"\nSite built: {SITE_DIR}/")
     print(f"  {total} comics, {total} pages + archive + about")
     return total
+
+
+# Alias for use by daily_pipeline.py
+build_all = build_site
 
 
 def serve(port=8000):
