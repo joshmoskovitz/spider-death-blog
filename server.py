@@ -25,7 +25,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict
 
-import anthropic
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +33,7 @@ from pydantic import BaseModel, Field
 import uvicorn
 
 from ai_renderer import render_from_description
+from costs import TrackedClient, BudgetExceededError
 
 PROJECT_DIR = Path(__file__).parent
 load_dotenv(PROJECT_DIR / ".env")
@@ -221,11 +221,16 @@ async def create_spider_death(req: CreateRequest, request: Request):
     if error:
         return JSONResponse(status_code=400, content={"error": error})
 
-    client = anthropic.Anthropic()
+    client = TrackedClient()
 
     # Step 1: Generate the post concept
     try:
         concept = generate_post_concept(req.phrase, client)
+    except BudgetExceededError:
+        return JSONResponse(
+            status_code=503,
+            content={"error": "Spidey's on a budget today. Try again tomorrow!"},
+        )
     except Exception as e:
         print(f"[ERROR] Concept generation failed: {e}", flush=True)
         return JSONResponse(
@@ -236,6 +241,11 @@ async def create_spider_death(req: CreateRequest, request: Request):
     # Step 2: Render the illustration
     try:
         img, _code = render_from_description(concept["scene_description"], client)
+    except BudgetExceededError:
+        return JSONResponse(
+            status_code=503,
+            content={"error": "Spidey's on a budget today. Try again tomorrow!"},
+        )
     except Exception as e:
         print(f"[ERROR] Rendering failed: {e}", flush=True)
         return JSONResponse(

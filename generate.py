@@ -17,7 +17,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-import anthropic
 from dotenv import load_dotenv
 
 PROJECT_DIR = Path(__file__).parent
@@ -81,7 +80,8 @@ def generate_batch(count):
     style_bible = load_style_bible()
     prompt = build_prompt(archive, style_bible, count)
 
-    client = anthropic.Anthropic()
+    from costs import TrackedClient
+    client = TrackedClient()
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=4096,

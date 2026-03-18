@@ -26,7 +26,6 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-import anthropic
 from dotenv import load_dotenv
 
 PROJECT_DIR = Path(__file__).parent
@@ -729,7 +728,8 @@ def main():
     with open(args.batch_file) as f:
         posts = json.load(f)
 
-    client = anthropic.Anthropic()
+    from costs import TrackedClient
+    client = TrackedClient()
 
     if args.index is not None:
         indices = [args.index]

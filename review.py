@@ -19,7 +19,6 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-import anthropic
 from dotenv import load_dotenv
 
 PROJECT_DIR = Path(__file__).parent
@@ -247,7 +246,8 @@ def print_review(image_path, reviews):
 
 def review_images(image_paths):
     """Review multiple images with all four critics in parallel."""
-    client = anthropic.Anthropic()
+    from costs import TrackedClient
+    client = TrackedClient()
     style_bible = load_style_bible()
 
     for image_path in image_paths:
