@@ -564,6 +564,16 @@ def render_scene(post):
         _scene_ski_resort(draw, post)
     elif "aquarium" in setting:
         _scene_aquarium(draw, post)
+    elif "backyard barbecue" in setting:
+        _scene_backyard_barbecue(draw, post)
+    elif "car wash" in setting:
+        _scene_car_wash(draw, post)
+    elif "library" in setting:
+        _scene_library(draw, post)
+    elif any(k in setting for k in ["rocket", "launchpad", "launch pad"]):
+        _scene_rocket_launchpad(draw, post)
+    elif "bowling" in setting:
+        _scene_bowling_alley(draw, post)
     else:
         # Smart fallback: indoor if it feels indoor, outdoor otherwise
         indoor_hints = ["office", "room", "store", "shop", "lab", "hospital", "basement",
@@ -2734,6 +2744,407 @@ def _scene_aquarium(draw, post):
     draw.text((tx2-172, ty2+22), "EXHIBIT 4 - OPEN TANK", fill=(165, 210, 252), font=FONT)
 
 
+def _scene_backyard_barbecue(draw, post):
+    # Sky and ground
+    draw_sky(draw)
+    draw_sun(draw, x=580, y=50)
+    draw_ground(draw, y=360, color=GRASS_GREEN, grass=True)
+
+    # White picket fence in background
+    for fx in range(0, 640, 32):
+        draw.rectangle([fx+4, 280, fx+18, 360], fill=WHITE, outline=BLACK, width=1)
+        draw.polygon([fx+4, 280, fx+11, 260, fx+18, 280], fill=WHITE, outline=BLACK, width=1)
+    draw.rectangle([0, 310, 640, 330], fill=WHITE, outline=BLACK, width=1)
+
+    # Clouds
+    spray_cloud(draw, 150, 100, 60)
+    spray_cloud(draw, 380, 120, 50)
+
+    # Table on right with red checkered cloth
+    draw.rectangle([430, 295, 620, 355], fill=DARK_BROWN, outline=BLACK, width=2)
+    cell = 16
+    for row in range(4):
+        for col in range(12):
+            x0 = 430 + col * cell
+            y0 = 270 + row * cell
+            fill = RED if (row + col) % 2 == 0 else WHITE
+            draw.rectangle([x0, min(x0+cell, 620), y0, y0+cell], fill=fill)
+    # redraw tablecloth properly
+    for row in range(4):
+        for col in range(12):
+            x0 = 430 + col * cell
+            y0 = 270 + row * cell
+            fill = RED if (row + col) % 2 == 0 else WHITE
+            draw.rectangle([x0, y0, x0+cell, y0+cell], fill=fill)
+    draw.rectangle([430, 270, 622, 298], outline=BLACK, width=2)
+
+    # Paper plate with smiley
+    draw.ellipse([445, 273, 490, 296], fill=WHITE, outline=BLACK, width=2)
+    draw.arc([455, 280, 480, 292], start=0, end=180, fill=BLACK, width=2)
+    draw.ellipse([458, 276, 463, 281], fill=BLACK)
+    draw.ellipse([472, 276, 477, 281], fill=BLACK)
+
+    # Cup
+    draw.polygon([500, 274, 512, 274, 510, 296, 502, 296], fill=LIGHT_BLUE, outline=BLACK, width=2)
+
+    # Sign: SPIDEY'S FIRST BBQ leaning on table
+    draw.rectangle([432, 248, 618, 268], fill=YELLOW, outline=BLACK, width=2)
+    draw.text((436, 252), "SPIDEY'S FIRST BBQ", fill=BLACK, font=FONT)
+
+    # GRILL — center-left, big and readable
+    grill_cx = 240
+    grill_top = 210
+    grill_bot = 310
+
+    # Grill legs
+    draw.line([grill_cx - 60, grill_bot, grill_cx - 75, 370], fill=DARK_GRAY, width=5)
+    draw.line([grill_cx + 60, grill_bot, grill_cx + 75, 370], fill=DARK_GRAY, width=5)
+
+    # Grill bowl (half-circle shape using ellipse)
+    draw.ellipse([grill_cx-100, grill_top, grill_cx+100, grill_bot+20], fill=DARK_GRAY, outline=BLACK, width=3)
+
+    # Coals and flames inside bowl
+    spray_paint(draw, grill_cx-30, grill_bot-10, 30, LAVA_RED, density=60)
+    spray_paint(draw, grill_cx+20, grill_bot-10, 30, BRIGHT_ORANGE, density=60)
+    spray_paint(draw, grill_cx, grill_bot-20, 25, YELLOW, density=40)
+    # Flame wisps rising
+    spray_paint(draw, grill_cx-20, grill_top+60, 18, BRIGHT_ORANGE, density=35)
+    spray_paint(draw, grill_cx+20, grill_top+55, 18, YELLOW, density=30)
+
+    # Grill grate
+    for gx in range(grill_cx-90, grill_cx+95, 20):
+        draw.line([gx, grill_top+40, gx, grill_bot], fill=BLACK, width=2)
+    for gy in range(grill_top+40, grill_bot, 18):
+        draw.line([grill_cx-90, gy, grill_cx+90, gy], fill=BLACK, width=2)
+
+    # Lid hint (top arc outline)
+    draw.arc([grill_cx-100, grill_top, grill_cx+100, grill_top+80], start=200, end=340, fill=BLACK, width=3)
+
+    # SKEWER across grill — the star of the scene
+    skewer_y = grill_top + 48
+    draw.line([grill_cx - 115, skewer_y, grill_cx + 115, skewer_y], fill=LIGHT_GRAY, width=5)
+    draw.line([grill_cx - 115, skewer_y, grill_cx + 115, skewer_y], fill=WHITE, width=2)
+
+    # Tomato left
+    draw.ellipse([grill_cx-80, skewer_y-13, grill_cx-50, skewer_y+13], fill=RED, outline=BLACK, width=2)
+    draw.line([grill_cx-65, skewer_y-13, grill_cx-62, skewer_y-20], fill=DARK_GREEN, width=2)
+
+    # SPIDEY on skewer — centered, high contrast bright background behind him
+    draw.ellipse([grill_cx-22, skewer_y-22, grill_cx+22, skewer_y+22], fill=BRIGHT_ORANGE)
+    draw_spidey(draw, grill_cx, skewer_y, size=20, expression="surprised")
+
+    # Bell pepper right
+    draw.rectangle([grill_cx+48, skewer_y-12, grill_cx+82, skewer_y+12], fill=LIGHT_GREEN, outline=BLACK, width=2)
+
+    # Flowers in foreground
+    draw_flower(draw, 60, 355, RED)
+    draw_flower(draw, 370, 358, YELLOW)
+    draw_flower(draw, 560, 352, PINK)
+
+
+def _scene_car_wash(draw, post):
+    # Yellow tunnel walls
+    draw.rectangle([0, 0, 640, 480], fill=(235, 210, 80))
+
+    # Add some grime streaks to walls for texture
+    for x in [60, 140, 500, 580]:
+        draw.rectangle([x, 100, x+4, 360], fill=(200, 180, 60))
+    for x in [90, 170, 470, 550]:
+        draw.rectangle([x, 150, x+2, 300], fill=(210, 190, 65))
+
+    # Blue ceiling
+    draw.rectangle([0, 0, 640, 100], fill=LIGHT_BLUE)
+
+    # Floor with soapy water color
+    floor_y = 360
+    draw.rectangle([0, floor_y, 640, 480], fill=(190, 215, 235))
+
+    # Horizontal dividers
+    draw.line([0, 100, 640, 100], fill=DARK_GRAY, width=3)
+    draw.line([0, floor_y, 640, floor_y], fill=DARK_GRAY, width=3)
+
+    # Soap suds on floor - chunky spray blobs
+    for cx, cy in [(80, 385), (180, 400), (440, 395), (560, 410)]:
+        spray_paint(draw, cx, cy, 32, WHITE, density=70)
+
+    # Smiley face drawn in soap suds near center-bottom - deliberate and charming
+    sx, sy = 320, 410
+    spray_paint(draw, sx, sy, 30, WHITE, density=55)
+    draw.ellipse([sx-20, sy-14, sx+20, sy+14], outline=(170, 195, 215), width=2)
+    draw.ellipse([sx-10, sy-6, sx-5, sy-1], fill=(170, 195, 215))
+    draw.ellipse([sx+5, sy-6, sx+10, sy-1], fill=(170, 195, 215))
+    draw.arc([sx-9, sy+2, sx+9, sy+11], start=0, end=180, fill=(170, 195, 215), width=2)
+
+    # Ceiling soap suds
+    for cx, cy in [(70, 92), (220, 80), (430, 86), (570, 90)]:
+        spray_paint(draw, cx, cy, 24, WHITE, density=55)
+
+    # DELUXE WASH sign
+    draw.rectangle([175, 15, 465, 60], fill=GRASS_GREEN)
+    draw.rectangle([175, 15, 465, 60], outline=DARK_GREEN, width=3)
+    draw.text((205, 30), "DELUXE WASH", fill=WHITE, font=FONT)
+
+    # Pine tree air freshener hanging from sign - bigger and clearer
+    fx = 450
+    draw.line([fx, 60, fx, 82], fill=DARK_BROWN, width=2)
+    # Card top
+    draw.rectangle([fx-8, 82, fx+8, 88], fill=(220, 220, 200))
+    # Tree shape - three stacked triangles
+    draw.polygon([fx, 66, fx-9, 84, fx+9, 84], fill=DARK_GREEN)
+    draw.polygon([fx, 74, fx-11, 94, fx+11, 94], fill=DARK_GREEN)
+    draw.polygon([fx, 82, fx-13, 104, fx+13, 104], fill=DARK_GREEN)
+    draw.rectangle([fx-4, 103, fx+4, 112], fill=BROWN)
+
+    # LEFT brush - wider, closer to center, with frayed edge feel
+    bx1 = 195
+    bw = 38
+    draw.rectangle([bx1-bw, 103, bx1+bw, floor_y], fill=PINK)
+    for i, y in enumerate(range(110, floor_y, 26)):
+        col = RED if i % 2 == 0 else (230, 80, 120)
+        draw.rectangle([bx1-bw, y, bx1+bw, y+14], fill=col)
+    draw.ellipse([bx1-bw, 98, bx1+bw, 126], fill=(220, 100, 140))
+    draw.ellipse([bx1-bw, floor_y-18, bx1+bw, floor_y+8], fill=(220, 100, 140))
+    draw.rectangle([bx1-bw, 98, bx1+bw, 100], outline=DARK_GRAY, width=2)
+    # Frayed bristle lines on right side of left brush
+    for y in range(120, floor_y, 18):
+        draw.line([bx1+bw, y, bx1+bw+10, y+5], fill=(200, 60, 100), width=2)
+        draw.line([bx1+bw, y+6, bx1+bw+8, y+2], fill=(220, 80, 120), width=1)
+    # Motion arcs
+    for y_m in [155, 215, 275, 315]:
+        draw.arc([bx1-bw-8, y_m, bx1+bw+8, y_m+22], start=190, end=350, fill=DARK_GRAY, width=2)
+
+    # RIGHT brush - wider, closer to center
+    bx2 = 445
+    draw.rectangle([bx2-bw, 103, bx2+bw, floor_y], fill=PINK)
+    for i, y in enumerate(range(115, floor_y, 26)):
+        col = RED if i % 2 == 0 else (230, 80, 120)
+        draw.rectangle([bx2-bw, y, bx2+bw, y+14], fill=col)
+    draw.ellipse([bx2-bw, 98, bx2+bw, 126], fill=(220, 100, 140))
+    draw.ellipse([bx2-bw, floor_y-18, bx2+bw, floor_y+8], fill=(220, 100, 140))
+    # Frayed bristle lines on left side of right brush
+    for y in range(120, floor_y, 18):
+        draw.line([bx2-bw, y, bx2-bw-10, y+5], fill=(200, 60, 100), width=2)
+        draw.line([bx2-bw, y+6, bx2-bw-8, y+2], fill=(220, 80, 120), width=1)
+    for y_m in [155, 215, 275, 315]:
+        draw.arc([bx2-bw-8, y_m, bx2+bw+8, y_m+22], start=190, end=350, fill=DARK_GRAY, width=2)
+
+    # Spidey caught between brushes - bright background patch so he pops
+    draw.ellipse([290, 205, 350, 265], fill=WHITE)
+    draw.ellipse([290, 205, 350, 265], outline=LIGHT_GRAY, width=1)
+
+    # Radiating shred lines from brushes toward Spidey
+    cx_s, cy_s = 320, 238
+    for angle_deg in [170, 185, 195, 10, 355, 345]:
+        a = angle_deg * 3.14159 / 180
+        x2 = cx_s + int(55 * math.cos(a))
+        y2 = cy_s + int(55 * math.sin(a))
+        draw.line([cx_s, cy_s, x2, y2], fill=RED, width=2)
+
+    draw_spidey(draw, cx_s, cy_s, size=16, expression="surprised")
+
+
+def _scene_library(draw, post):
+    """Library scene — Spidey crushed under a stack of encyclopedias."""
+    # Walls and floor
+    draw_room(draw, wall_color=BEIGE, floor_color=DARK_BROWN, floor_y=400)
+
+    # Back wall shelves — full height bookshelves on both sides
+    for shelf_x, shelf_w in [(0, 150), (490, 150)]:
+        draw.rectangle([shelf_x, 30, shelf_x + shelf_w, 400], fill=BROWN, outline=DARK_BROWN, width=2)
+        for sy in range(45, 390, 45):
+            draw.line([(shelf_x + 5, sy), (shelf_x + shelf_w - 5, sy)], fill=DARK_BROWN, width=2)
+            for bx in range(shelf_x + 8, shelf_x + shelf_w - 8, 12):
+                c = random.choice([RED, BLUE, DARK_GREEN, PURPLE, BROWN, MAROON, NAVY, ORANGE])
+                bh = random.randint(25, 38)
+                draw.rectangle([bx, sy + 3, bx + 9, sy + bh], fill=c, outline=BLACK, width=1)
+
+    # Reading table in center
+    draw.rectangle([200, 310, 440, 335], fill=LIGHT_BROWN, outline=DARK_BROWN, width=2)
+    draw.rectangle([215, 335, 235, 400], fill=LIGHT_BROWN, outline=DARK_BROWN, width=1)
+    draw.rectangle([405, 335, 425, 400], fill=LIGHT_BROWN, outline=DARK_BROWN, width=1)
+
+    # Tiny open book on table
+    draw.rectangle([280, 300, 310, 310], fill=WHITE, outline=DARK_GRAY, width=1)
+    draw.rectangle([310, 300, 340, 310], fill=WHITE, outline=DARK_GRAY, width=1)
+    draw.line([(310, 300), (310, 310)], fill=BLACK, width=1)
+
+    # Spidey at the table with tiny reading glasses
+    draw_spidey(draw, 320, 290, size=16, expression="alarmed")
+    # Glasses
+    draw.ellipse([312, 286, 320, 292], fill=None, outline=BLACK, width=1)
+    draw.ellipse([322, 286, 330, 292], fill=None, outline=BLACK, width=1)
+
+    # Teetering stack of encyclopedias falling onto Spidey
+    stack_x = 300
+    colors_list = [RED, BLUE, DARK_GREEN, PURPLE, MAROON, NAVY, ORANGE, BROWN]
+    for j in range(8):
+        y = 220 - j * 22
+        tilt = j * 2  # increasing tilt as stack goes up
+        c = colors_list[j % len(colors_list)]
+        draw.polygon([
+            (stack_x - 30 + tilt, y),
+            (stack_x + 30 + tilt, y),
+            (stack_x + 30 + tilt - 2, y + 18),
+            (stack_x - 30 + tilt - 2, y + 18),
+        ], fill=c, outline=BLACK, width=1)
+        # Volume label
+        vol = f"Vol.{j + 1}"
+        draw.text((stack_x - 20 + tilt, y + 4), vol, font=FONT, fill=WHITE)
+
+    # OVERDUE library card on floor
+    draw.rectangle([180, 380, 240, 395], fill=WHITE, outline=BLACK, width=1)
+    draw.text((185, 383), "OVERDUE", font=FONT, fill=RED)
+
+    # "QUIET PLEASE" sign on wall
+    draw_framed_text(draw, 310, 60, "QUIET\nPLEASE", w=80, h=50)
+
+    # Clock on wall
+    draw_clock(draw, 240, 60)
+
+
+def _scene_rocket_launchpad(draw, post):
+    """Rocket launchpad scene — Spidey strapped to a shuttle nose cone."""
+    # Night sky
+    draw.rectangle([0, 0, 640, 480], fill=(15, 15, 40))
+
+    # Stars
+    for _ in range(60):
+        sx = random.randint(0, 640)
+        sy = random.randint(0, 300)
+        sr = random.randint(1, 3)
+        draw.ellipse([sx - sr, sy - sr, sx + sr, sy + sr], fill=WHITE)
+
+    # Earth curve at bottom
+    draw.ellipse([50, 380, 590, 600], fill=(40, 120, 80), outline=(30, 100, 60), width=3)
+    # Ocean patches
+    draw.ellipse([150, 400, 300, 480], fill=(40, 80, 180))
+    draw.ellipse([350, 390, 500, 470], fill=(40, 80, 180))
+
+    # Launch pad — flat gray platform
+    draw.rectangle([220, 360, 420, 385], fill=GRAY, outline=DARK_GRAY, width=2)
+    # Support structure
+    draw.rectangle([230, 200, 260, 360], fill=DARK_GRAY, outline=BLACK, width=2)
+    for gy in range(210, 360, 20):
+        draw.line([(230, gy), (290, gy)], fill=GRAY, width=1)
+
+    # Rocket body
+    rx, ry = 330, 120
+    rw, rh = 40, 240
+    draw.rectangle([rx - rw//2, ry, rx + rw//2, ry + rh], fill=WHITE, outline=DARK_GRAY, width=2)
+    # Red stripe
+    draw.rectangle([rx - rw//2, ry + 60, rx + rw//2, ry + 80], fill=RED)
+    # Blue stripe
+    draw.rectangle([rx - rw//2, ry + 100, rx + rw//2, ry + 120], fill=BLUE)
+    # USA text
+    draw.text((rx - 12, ry + 140), "USA", font=FONT, fill=BLUE)
+    # Nose cone
+    draw.polygon([(rx - rw//2, ry), (rx, ry - 50), (rx + rw//2, ry)],
+                 fill=RED, outline=DARK_GRAY, width=2)
+    # Fins at bottom
+    draw.polygon([(rx - rw//2, ry + rh - 30), (rx - rw//2 - 20, ry + rh), (rx - rw//2, ry + rh)],
+                 fill=RED, outline=BLACK, width=1)
+    draw.polygon([(rx + rw//2, ry + rh - 30), (rx + rw//2 + 20, ry + rh), (rx + rw//2, ry + rh)],
+                 fill=RED, outline=BLACK, width=1)
+    # Window
+    draw.ellipse([rx - 8, ry + 30, rx + 8, ry + 46], fill=LIGHT_BLUE, outline=DARK_GRAY, width=2)
+
+    # Spidey strapped to nose cone tip
+    draw_spidey(draw, rx, ry - 35, size=14, expression="alarmed")
+    # Tiny helmet
+    draw.arc([rx - 10, ry - 48, rx + 10, ry - 32], start=180, end=0, fill=WHITE, width=2)
+
+    # Flames coming from bottom
+    for _ in range(25):
+        fx = random.randint(rx - 25, rx + 25)
+        fy = random.randint(ry + rh, ry + rh + 80)
+        fr = random.randint(5, 15)
+        fc = random.choice([BRIGHT_ORANGE, YELLOW, RED, LAVA_ORANGE])
+        spray_paint(draw, fx, fy, fr, fc, density=0.5)
+
+    # American flag planted near launchpad
+    flag_x = 180
+    draw.line([(flag_x, 340), (flag_x, 375)], fill=DARK_GRAY, width=2)
+    draw.rectangle([flag_x, 340, flag_x + 22, 352], fill=RED)
+    draw.rectangle([flag_x, 346, flag_x + 8, 352], fill=BLUE)
+    # Stripes
+    draw.line([(flag_x, 344), (flag_x + 22, 344)], fill=WHITE, width=1)
+    draw.line([(flag_x, 348), (flag_x + 22, 348)], fill=WHITE, width=1)
+
+    # Countdown chalkboard
+    draw.rectangle([440, 300, 530, 350], fill=(30, 50, 30), outline=BROWN, width=2)
+    draw.text((460, 310), "T - 0", font=FONT, fill=WHITE)
+    draw.text((450, 330), "LAUNCH!", font=FONT, fill=YELLOW)
+
+
+def _scene_bowling_alley(draw, post):
+    """Bowling alley scene — Spidey rolled over by a bowling ball."""
+    # Dark walls
+    draw.rectangle([0, 0, 640, 480], fill=(30, 30, 80))
+
+    # Neon-lit ceiling strip
+    draw.rectangle([0, 0, 640, 30], fill=NAVY)
+    for nx in range(0, 640, 40):
+        c = random.choice([RED, BLUE, PURPLE, PINK])
+        draw.rectangle([nx, 5, nx + 30, 25], fill=c, outline=None)
+
+    # Lane — long tan rectangle stretching into distance
+    lane_left = 200
+    lane_right = 440
+    draw.rectangle([lane_left, 50, lane_right, 480], fill=FLOOR_TAN, outline=DARK_BROWN, width=2)
+    # Lane lines
+    draw.line([(lane_left + 10, 50), (lane_left + 10, 480)], fill=DARK_BROWN, width=1)
+    draw.line([(lane_right - 10, 50), (lane_right - 10, 480)], fill=DARK_BROWN, width=1)
+    # Lane arrows
+    for ay in range(300, 380, 25):
+        draw.polygon([(320, ay), (315, ay + 15), (325, ay + 15)], fill=RED)
+
+    # Gutters
+    draw.rectangle([lane_left - 20, 50, lane_left, 480], fill=DARK_GRAY, outline=BLACK, width=1)
+    draw.rectangle([lane_right, 50, lane_right + 20, 480], fill=DARK_GRAY, outline=BLACK, width=1)
+
+    # Pins at far end — triangle formation
+    pin_y = 80
+    pin_positions = [
+        (320, pin_y),
+        (310, pin_y + 20), (330, pin_y + 20),
+        (300, pin_y + 40), (320, pin_y + 40), (340, pin_y + 40),
+        (290, pin_y + 60), (310, pin_y + 60), (330, pin_y + 60), (350, pin_y + 60),
+    ]
+    for px, py in pin_positions:
+        # Pin body
+        draw.ellipse([px - 5, py - 3, px + 5, py + 10], fill=WHITE, outline=BLACK, width=1)
+        # Red stripe
+        draw.line([(px - 4, py + 2), (px + 4, py + 2)], fill=RED, width=2)
+
+    # Spidey in the middle of the lane, facing pins
+    draw_spidey(draw, 320, 260, size=18, expression="surprised")
+
+    # Bowling ball rolling toward Spidey from foreground
+    ball_y = 400
+    draw.ellipse([300, ball_y - 20, 340, ball_y + 20], fill=BLACK, outline=DARK_GRAY, width=3)
+    # Finger holes
+    draw.ellipse([312, ball_y - 10, 318, ball_y - 4], fill=DARK_GRAY)
+    draw.ellipse([322, ball_y - 10, 328, ball_y - 4], fill=DARK_GRAY)
+    draw.ellipse([317, ball_y - 2, 323, ball_y + 4], fill=DARK_GRAY)
+
+    # Motion lines behind ball
+    for ml in range(3):
+        my = ball_y + 25 + ml * 8
+        draw.line([(305, my), (335, my)], fill=LIGHT_GRAY, width=2)
+
+    # Scoreboard above
+    draw.rectangle([220, 35, 420, 60], fill=BLACK, outline=DARK_GRAY, width=2)
+    draw.text((240, 40), "300 - SPIDEY", font=FONT, fill=GREEN)
+
+    # Shoe rack in corner
+    draw.rectangle([30, 300, 130, 400], fill=BROWN, outline=DARK_BROWN, width=2)
+    for sy in range(310, 390, 20):
+        draw.line([(35, sy), (125, sy)], fill=DARK_BROWN, width=1)
+    # Tiny shoe
+    draw.rectangle([50, 365, 75, 380], fill=RED, outline=BLACK, width=1)
+    draw.text((52, 367), "1/2", font=FONT, fill=WHITE)
+
+
 def _scene_generic_indoor(draw, post):
     """Fallback indoor scene with decent detail."""
     draw_room(draw, wall_color=WALL_YELLOW, floor_color=FLOOR_TAN, floor_y=390)
@@ -2773,222 +3184,34 @@ def _scene_generic_indoor(draw, post):
 
 
 def _scene_generic_outdoor(draw, post):
-    # === GOLF COURSE SCENE ===
+    """Generic outdoor fallback — simple park/field scene."""
+    draw_sky(draw)
+    draw_sun(draw, x=560, y=60)
+    draw_ground(draw, y=340, grass=True)
 
-    # Sky - flat clean blue
-    draw.rectangle([0, 0, 640, 300], fill=SKY_BLUE)
+    # A tree
+    draw_tree(draw, 100, 340)
 
-    # Puffy clouds - rough spray paint style
-    spray_paint(draw, 120, 70, 45, WHITE, density=0.7)
-    spray_paint(draw, 155, 60, 38, WHITE, density=0.65)
-    spray_paint(draw, 90, 75, 32, WHITE, density=0.6)
+    # A path
+    draw.polygon([(280, 340), (360, 340), (400, 480), (240, 480)],
+                 fill=SAND_YELLOW, outline=DARK_BROWN, width=1)
 
-    spray_paint(draw, 430, 55, 40, WHITE, density=0.7)
-    spray_paint(draw, 465, 48, 35, WHITE, density=0.65)
-    spray_paint(draw, 405, 60, 30, WHITE, density=0.6)
+    # Bench
+    draw.rectangle([420, 310, 550, 325], fill=BROWN, outline=DARK_BROWN, width=2)
+    draw.rectangle([430, 325, 445, 340], fill=BROWN)
+    draw.rectangle([535, 325, 550, 340], fill=BROWN)
 
-    # Ground - bright flat green
-    draw.rectangle([0, 280, 640, 480], fill=GRASS_GREEN)
-    # Slightly darker green strip at horizon
-    draw.rectangle([0, 278, 640, 295], fill=DARK_GREEN)
+    # Flowers
+    for fx in [460, 500, 540]:
+        draw_flower(draw, fx, 335, color=random.choice([RED, PINK, YELLOW, PURPLE]))
 
-    # === GOLF HOLE + FLAG (right side) ===
-    hole_x = 520
-    hole_y = 310
-    # Hole - dark oval in ground
-    draw.ellipse([hole_x - 18, hole_y - 7, hole_x + 18, hole_y + 7],
-                 fill=BLACK, outline=DARK_GREEN, width=2)
-    # Dark green circle around hole
-    draw.ellipse([hole_x - 28, hole_y - 12, hole_x + 28, hole_y + 12],
-                 fill=DARK_GREEN, outline=None)
-    draw.ellipse([hole_x - 18, hole_y - 7, hole_x + 18, hole_y + 7],
-                 fill=BLACK)
-    # Flag pole
-    draw.line([hole_x, hole_y - 7, hole_x, hole_y - 80],
-              fill=DARK_GRAY, width=3)
-    # Flag - red and white striped
-    draw.polygon([
-        (hole_x, hole_y - 80),
-        (hole_x + 38, hole_y - 65),
-        (hole_x, hole_y - 50),
-    ], fill=RED, outline=DARK_GRAY, width=2)
-    # White stripe on flag
-    draw.line([hole_x, hole_y - 72, hole_x + 38, hole_y - 65],
-              fill=WHITE, width=3)
+    # Spidey on the path
+    draw_spidey(draw, 320, 360, size=20, expression="surprised")
 
-    # === GOLF CART (right side, near flag) ===
-    cart_x = 430
-    cart_y = 320
-    # Cart body
-    draw.rectangle([cart_x, cart_y - 20, cart_x + 80, cart_y + 10],
-                   fill=LIGHT_BLUE, outline=DARK_GRAY, width=2)
-    # Cart roof
-    draw.rectangle([cart_x + 5, cart_y - 38, cart_x + 75, cart_y - 20],
-                   fill=WHITE, outline=DARK_GRAY, width=2)
-    # Wheels
-    draw.ellipse([cart_x + 5, cart_y + 5, cart_x + 25, cart_y + 25],
-                 fill=DARK_GRAY, outline=BLACK, width=2)
-    draw.ellipse([cart_x + 55, cart_y + 5, cart_x + 75, cart_y + 25],
-                 fill=DARK_GRAY, outline=BLACK, width=2)
-    # Wheel hubs
-    draw.ellipse([cart_x + 12, cart_y + 12, cart_x + 18, cart_y + 18],
-                 fill=LIGHT_GRAY, outline=BLACK, width=1)
-    draw.ellipse([cart_x + 62, cart_y + 12, cart_x + 68, cart_y + 18],
-                 fill=LIGHT_GRAY, outline=BLACK, width=1)
-
-    # Striped umbrella on cart
-    umb_x = cart_x + 40
-    umb_y = cart_y - 38
-    # Pole
-    draw.line([umb_x, umb_y, umb_x, umb_y - 30], fill=DARK_GRAY, width=2)
-    # Canopy - alternating yellow and white wedges
-    for i in range(6):
-        angle_start = -180 + i * 30
-        angle_end = angle_start + 30
-        color = YELLOW if i % 2 == 0 else WHITE
-        draw.pieslice([umb_x - 22, umb_y - 50, umb_x + 22, umb_y - 10],
-                      start=angle_start, end=angle_end,
-                      fill=color, outline=DARK_GRAY, width=1)
-    # Umbrella tip
-    draw.ellipse([umb_x - 3, umb_y - 53, umb_x + 3, umb_y - 47],
-                 fill=YELLOW, outline=DARK_GRAY, width=1)
-
-    # === SCORECARD on the ground (bottom left) ===
-    sc_x, sc_y = 30, 355
-    draw.rectangle([sc_x, sc_y, sc_x + 130, sc_y + 65],
-                   fill=WHITE, outline=DARK_GRAY, width=2)
-    # Header
-    draw.rectangle([sc_x, sc_y, sc_x + 130, sc_y + 14],
-                   fill=LIGHT_BLUE, outline=DARK_GRAY, width=2)
-    draw.text((sc_x + 28, sc_y + 3), "SCORECARD", font=FONT, fill=BLACK)
-    # Hole numbers row
-    draw.text((sc_x + 4, sc_y + 18), "HOLE:", font=FONT, fill=DARK_GRAY)
-    draw.text((sc_x + 4, sc_y + 32), "1 2 3 4 5 6 7 8 9", font=FONT, fill=BLACK)
-    # Score row - all zeros in red
-    draw.text((sc_x + 4, sc_y + 46), "SCR:", font=FONT, fill=RED)
-    draw.text((sc_x + 32, sc_y + 46), "0 0 0 0 0 0 0 0 0", font=FONT, fill=RED)
-
-    # === TEE AREA - CENTER STAGE ===
-    tee_x = 290
-    tee_y = 330
-
-    # Tee shadow / circle on ground
-    draw.ellipse([tee_x - 20, tee_y + 15, tee_x + 20, tee_y + 22],
-                 fill=DARK_GREEN, outline=None)
-
-    # Tee peg - bright yellow, clearly visible
-    draw.polygon([
-        (tee_x - 5, tee_y + 16),
-        (tee_x + 5, tee_y + 16),
-        (tee_x + 8, tee_y + 30),
-        (tee_x - 8, tee_y + 30),
-    ], fill=YELLOW, outline=DARK_GRAY, width=2)
-    # Tee top cup
-    draw.ellipse([tee_x - 8, tee_y + 8, tee_x + 8, tee_y + 18],
-                 fill=YELLOW, outline=DARK_GRAY, width=2)
-
-    # === SPIDEY - pinned under golf ball, center of scene ===
-    # Spidey is UNDER the ball, legs splayed out
-    spidey_cx = tee_x
-    spidey_cy = tee_y + 6
-
-    # Draw Spidey first (will be partially covered by ball)
-    draw_spidey(draw, spidey_cx, spidey_cy, size=18, expression="dead")
-
-    # Golf ball ON TOP of Spidey - bright white, large, clearly crushing him
-    ball_r = 20
-    # Ball shadow
-    draw.ellipse([spidey_cx - ball_r - 3, spidey_cy - ball_r,
-                  spidey_cx + ball_r + 3, spidey_cy + ball_r + 4],
-                 fill=DARK_GREEN, outline=None)
-    # Ball body - flat white with dark outline for contrast
-    draw.ellipse([spidey_cx - ball_r, spidey_cy - ball_r - 2,
-                  spidey_cx + ball_r, spidey_cy + ball_r - 2],
-                 fill=WHITE, outline=DARK_GRAY, width=3)
-    # Dimple lines on ball
-    draw.arc([spidey_cx - 12, spidey_cy - 14, spidey_cx + 12, spidey_cy - 2],
-             start=0, end=180, fill=LIGHT_GRAY, width=2)
-    draw.arc([spidey_cx - 10, spidey_cy - 6, spidey_cx + 10, spidey_cy + 6],
-             start=0, end=180, fill=LIGHT_GRAY, width=1)
-
-    # Spidey's legs visible sticking out from under ball
-    leg_color = BLACK
-    # Left legs splayed
-    draw.line([spidey_cx - ball_r, spidey_cy - 5,
-               spidey_cx - ball_r - 22, spidey_cy - 18], fill=leg_color, width=3)
-    draw.line([spidey_cx - ball_r, spidey_cy,
-               spidey_cx - ball_r - 25, spidey_cy + 2], fill=leg_color, width=3)
-    draw.line([spidey_cx - ball_r, spidey_cy + 5,
-               spidey_cx - ball_r - 22, spidey_cy + 15], fill=leg_color, width=3)
-    draw.line([spidey_cx - ball_r + 4, spidey_cy + 8,
-               spidey_cx - ball_r - 12, spidey_cy + 25], fill=leg_color, width=3)
-    # Right legs splayed
-    draw.line([spidey_cx + ball_r, spidey_cy - 5,
-               spidey_cx + ball_r + 22, spidey_cy - 18], fill=leg_color, width=3)
-    draw.line([spidey_cx + ball_r, spidey_cy,
-               spidey_cx + ball_r + 25, spidey_cy + 2], fill=leg_color, width=3)
-    draw.line([spidey_cx + ball_r, spidey_cy + 5,
-               spidey_cx + ball_r + 22, spidey_cy + 15], fill=leg_color, width=3)
-    draw.line([spidey_cx + ball_r - 4, spidey_cy + 8,
-               spidey_cx + ball_r + 12, spidey_cy + 25], fill=leg_color, width=3)
-
-    # === GOLF CLUB swinging in from upper left ===
-    # Club shaft - long brown diagonal line
-    shaft_start = (80, 80)
-    shaft_end = (spidey_cx - 10, spidey_cy - 22)
-
-    draw.line([shaft_start, shaft_end], fill=DARK_BROWN, width=6)
-    draw.line([shaft_start, shaft_end], fill=BROWN, width=3)
-
-    # Club head - dark gray rectangle at angle, at impact point
-    # Club head at bottom of shaft
-    head_cx = shaft_end[0] - 5
-    head_cy = shaft_end[1]
-
-    # Club head body - flat dark rectangle
-    draw.polygon([
-        (head_cx - 22, head_cy - 8),
-        (head_cx + 8, head_cy - 18),
-        (head_cx + 18, head_cy + 8),
-        (head_cx - 12, head_cy + 18),
-    ], fill=DARK_GRAY, outline=BLACK, width=3)
-    # Metal shine line on club head
-    draw.line([head_cx - 14, head_cy - 4, head_cx + 6, head_cy - 12],
-              fill=LIGHT_GRAY, width=2)
-
-    # Golf grip (top of club handle)
-    draw.ellipse([shaft_start[0] - 8, shaft_start[1] - 8,
-                  shaft_start[0] + 8, shaft_start[1] + 8],
-                 fill=DARK_GRAY, outline=BLACK, width=2)
-
-    # === SWING MOTION LINES ===
-    # Arc lines showing club swing path
-    for i in range(4):
-        offset = (i + 1) * 12
-        draw.arc([shaft_end[0] - 80 - offset, shaft_end[1] - 80 - offset,
-                  shaft_end[0] + 80 + offset, shaft_end[1] + 80 + offset],
-                 start=200, end=230, fill=YELLOW, width=2)
-
-    # Impact star burst around ball/spider
-    star_pts_list = [
-        [(spidey_cx - 30, spidey_cy - 35), (spidey_cx - 12, spidey_cy - 18)],
-        [(spidey_cx + 30, spidey_cy - 35), (spidey_cx + 12, spidey_cy - 18)],
-        [(spidey_cx - 40, spidey_cy + 5), (spidey_cx - 22, spidey_cy + 3)],
-        [(spidey_cx + 40, spidey_cy + 5), (spidey_cx + 22, spidey_cy + 3)],
-        [(spidey_cx, spidey_cy - 42), (spidey_cx, spidey_cy - 22)],
-    ]
-    for pts in star_pts_list:
-        draw.line(pts, fill=YELLOW, width=3)
-    # Impact star tips
-    for pts in star_pts_list:
-        px, py = pts[0]
-        draw.ellipse([px - 4, py - 4, px + 4, py + 4], fill=YELLOW, outline=None)
-
-    # Small "!" above impact
-    draw.text((spidey_cx + 28, spidey_cy - 50), "!", font=FONT, fill=RED)
-
-    # Smiley sun top right - hidden charm detail
-    draw_sun(draw, x=580, y=55)
+    # Sign
+    hidden = post.get("hidden_touch", "")
+    sign_text = _extract_sign_text(hidden)
+    draw_framed_text(draw, 180, 280, sign_text, w=80, h=45)
 
 
 def _extract_sign_text(hidden_touch):

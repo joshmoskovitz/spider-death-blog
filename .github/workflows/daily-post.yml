@@ -1,0 +1,62 @@
+name: Daily Spider Death
+
+on:
+  schedule:
+    # 2 PM UTC every day (9 AM ET / 6 AM PT)
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+    # Manual trigger for testing
+    inputs:
+      dry_run:
+        description: 'Dry run (generate but do not archive)'
+        type: boolean
+        default: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Pillow needs fonts for text rendering
+      - name: Install system fonts
+        run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core
+
+      - name: Run daily pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          API_URL: ${{ vars.API_URL }}
+          DAILY_BUDGET: '5.00'
+          MONTHLY_BUDGET: '50.00'
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python3 daily_pipeline.py --dry-run
+          else
+            python3 daily_pipeline.py
+          fi
+
+      - name: Commit and push new post
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          git config user.name "Spider Death Bot"
+          git config user.email "bot@spiderdeath.blog"
+          git add archive/ site/ drafts/
+          # Only commit if there are changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Daily post: $(date -u +%Y-%m-%d)"
+            git push
+          fi

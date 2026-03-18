@@ -19,8 +19,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-import anthropic
 from dotenv import load_dotenv
+
+from costs import TrackedClient
 
 PROJECT_DIR = Path(__file__).parent
 load_dotenv(PROJECT_DIR / ".env")
@@ -148,7 +149,10 @@ POST CONTEXT:
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=800,
-        system=f"{critic['system']}\n\nSTYLE BIBLE:\n{style_bible}",
+        system=[
+            {"type": "text", "text": style_bible, "cache_control": {"type": "ephemeral"}},
+            {"type": "text", "text": critic["system"]},
+        ],
         messages=[{
             "role": "user",
             "content": [
@@ -247,7 +251,7 @@ def print_review(image_path, reviews):
 
 def review_images(image_paths):
     """Review multiple images with all four critics in parallel."""
-    client = anthropic.Anthropic()
+    client = TrackedClient()
     style_bible = load_style_bible()
 
     for image_path in image_paths:

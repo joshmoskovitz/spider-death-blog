@@ -1,0 +1,10 @@
+.env
+.git
+.github
+__pycache__
+*.pyc
+site/
+drafts/versions/
+*.db
+costs.jsonl
+daily_log.jsonl

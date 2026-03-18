@@ -18,14 +18,9 @@ import json
 import os
 import re
 import sys
-import time
-import uuid
-from collections import defaultdict
-from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional
 
-import anthropic
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,50 +29,24 @@ from pydantic import BaseModel, Field
 import uvicorn
 
 from ai_renderer import render_from_description
+from community_db import CommunityDB
+from costs import TrackedClient, BudgetExceededError
+from rate_limiter import RateLimiter
 
 PROJECT_DIR = Path(__file__).parent
 load_dotenv(PROJECT_DIR / ".env")
 
 STYLE_BIBLE_PATH = PROJECT_DIR / "style_bible.txt"
-COMMUNITY_BOARD_PATH = PROJECT_DIR / "community_board.json"
-
 
 # ---------------------------------------------------------------------------
-# Community board storage
+# Persistent rate limiter and community board (SQLite-backed)
 # ---------------------------------------------------------------------------
 
-def _load_community_board():
-    # type: () -> List[dict]
-    if not COMMUNITY_BOARD_PATH.exists():
-        return []
-    with open(COMMUNITY_BOARD_PATH) as f:
-        return json.load(f)
+_rate_limiter = RateLimiter()
+_community_db = CommunityDB()
 
-
-def _save_community_board(entries):
-    # type: (List[dict]) -> None
-    with open(COMMUNITY_BOARD_PATH, "w") as f:
-        json.dump(entries, f, indent=2)
-
-# ---------------------------------------------------------------------------
-# Rate limiting — simple in-memory per-IP tracker
-# ---------------------------------------------------------------------------
-
-MAX_REQUESTS_PER_HOUR = 5
-_request_log: Dict[str, List[float]] = defaultdict(list)
-
-
-def _is_rate_limited(ip: str) -> bool:
-    """Check if an IP has exceeded the hourly generation limit."""
-    now = time.time()
-    window = 3600  # 1 hour
-    # Prune old entries
-    _request_log[ip] = [t for t in _request_log[ip] if now - t < window]
-    return len(_request_log[ip]) >= MAX_REQUESTS_PER_HOUR
-
-
-def _record_request(ip: str) -> None:
-    _request_log[ip].append(time.time())
+MAX_CREATES_PER_HOUR = 5
+MAX_VOTES_PER_HOUR = 20
 
 
 # ---------------------------------------------------------------------------
@@ -121,9 +90,7 @@ def _load_style_bible() -> str:
 CONCEPT_SYSTEM_PROMPT = """\
 You generate Spider Death Blog post concepts. The user gives you a short phrase \
 describing how they want the spider to die. You produce a complete post in the \
-blog's house style.
-
-{style_bible}
+blog's house style (see the style bible above).
 
 CONTENT POLICY:
 - Keep deaths WHIMSICAL and THEATRICAL — cartoonish, never graphic or gory.
@@ -144,15 +111,17 @@ Return ONLY a JSON object (no markdown fences) with these fields:
 """
 
 
-def generate_post_concept(phrase: str, client: anthropic.Anthropic) -> dict:
+def generate_post_concept(phrase: str, client) -> dict:
     """Generate a full post concept from a user's phrase."""
     style_bible = _load_style_bible()
-    system = CONCEPT_SYSTEM_PROMPT.format(style_bible=style_bible)
 
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=1024,
-        system=system,
+        system=[
+            {"type": "text", "text": style_bible, "cache_control": {"type": "ephemeral"}},
+            {"type": "text", "text": CONCEPT_SYSTEM_PROMPT.replace("{style_bible}", "")},
+        ],
         messages=[{
             "role": "user",
             "content": f"Create a Spider Death Blog post where the spider dies by: {phrase}",
@@ -175,11 +144,15 @@ def generate_post_concept(phrase: str, client: anthropic.Anthropic) -> dict:
 
 app = FastAPI(title="Spider Death Blog — Create Your Own")
 
+_cors_origins = os.environ.get(
+    "CORS_ORIGINS", "http://localhost:3000,http://localhost:8000"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in _cors_origins],
     allow_methods=["GET", "POST"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type"],
 )
 
 
@@ -207,8 +180,8 @@ async def create_spider_death(req: CreateRequest, request: Request):
     """Generate a custom spider death post from a user's phrase."""
     client_ip = request.client.host if request.client else "unknown"
 
-    # Rate limit
-    if _is_rate_limited(client_ip):
+    # Rate limit (persistent across restarts)
+    if _rate_limiter.is_rate_limited(client_ip, MAX_CREATES_PER_HOUR, 3600):
         return JSONResponse(
             status_code=429,
             content={
@@ -221,11 +194,17 @@ async def create_spider_death(req: CreateRequest, request: Request):
     if error:
         return JSONResponse(status_code=400, content={"error": error})
 
-    client = anthropic.Anthropic()
+    client = TrackedClient()
 
     # Step 1: Generate the post concept
     try:
         concept = generate_post_concept(req.phrase, client)
+    except BudgetExceededError as e:
+        print(f"[BUDGET] {e}", flush=True)
+        return JSONResponse(
+            status_code=503,
+            content={"error": "Spidey's on a budget today. Try again later!"},
+        )
     except Exception as e:
         print(f"[ERROR] Concept generation failed: {e}", flush=True)
         return JSONResponse(
@@ -236,6 +215,12 @@ async def create_spider_death(req: CreateRequest, request: Request):
     # Step 2: Render the illustration
     try:
         img, _code = render_from_description(concept["scene_description"], client)
+    except BudgetExceededError as e:
+        print(f"[BUDGET] {e}", flush=True)
+        return JSONResponse(
+            status_code=503,
+            content={"error": "Spidey's on a budget today. Try again later!"},
+        )
     except Exception as e:
         print(f"[ERROR] Rendering failed: {e}", flush=True)
         return JSONResponse(
@@ -248,7 +233,7 @@ async def create_spider_death(req: CreateRequest, request: Request):
     img.save(buf, format="PNG")
     image_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
 
-    _record_request(client_ip)
+    _rate_limiter.record_request(client_ip)
 
     return CreateResponse(
         setting=concept.get("setting", ""),
@@ -288,62 +273,70 @@ class CommunityEntry(BaseModel):
 
 class VoteRequest(BaseModel):
     entry_id: str
-    direction: str = Field(..., description="'up' or 'down'")
+    direction: Optional[str] = Field(None, description="'up', 'down', or null")
+    previous: Optional[str] = Field(None, description="Previous vote to undo: 'up', 'down', or null")
 
 
 @app.post("/api/community/submit")
-async def community_submit(submission: CommunitySubmission):
+async def community_submit(submission: CommunitySubmission, request: Request):
     """Add a generated spider death to the community board."""
-    entries = _load_community_board()
-    entry = {
-        "id": str(uuid.uuid4()),
-        "phrase": submission.phrase,
-        "intro": submission.intro,
-        "caption": submission.caption,
-        "hashtags": submission.hashtags,
-        "image_base64": submission.image_base64,
-        "upvotes": 0,
-        "downvotes": 0,
-        "created_at": datetime.now().isoformat(),
-    }
-    entries.append(entry)
-    _save_community_board(entries)
-    return {"id": entry["id"], "message": "Added to the community board!"}
+    client_ip = request.client.host if request.client else "unknown"
+
+    if _rate_limiter.is_rate_limited(client_ip, MAX_CREATES_PER_HOUR, 3600):
+        return JSONResponse(
+            status_code=429,
+            content={"error": "Slow down! Try again in a bit."},
+        )
+
+    try:
+        result = _community_db.submit(
+            phrase=submission.phrase,
+            intro=submission.intro,
+            caption=submission.caption,
+            hashtags=submission.hashtags,
+            image_base64=submission.image_base64,
+        )
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
+
+    return {"id": result["id"], "message": "Added to the community board!"}
 
 
 @app.get("/api/community/board")
 async def community_board():
     """Return the top 20 community spider deaths by vote score."""
-    entries = _load_community_board()
-    for e in entries:
-        e["score"] = e.get("upvotes", 0) - e.get("downvotes", 0)
-    entries.sort(key=lambda e: e["score"], reverse=True)
-    top_20 = entries[:20]
-    return {"entries": top_20}
+    entries = _community_db.top_entries(limit=20)
+    return {"entries": entries}
 
 
 @app.post("/api/community/vote")
-async def community_vote(req: VoteRequest):
+async def community_vote(req: VoteRequest, request: Request):
     """Vote on a community board entry."""
-    if req.direction not in ("up", "down"):
+    valid_directions = ("up", "down", None)
+    if req.direction not in valid_directions:
         return JSONResponse(
             status_code=400,
-            content={"error": "Direction must be 'up' or 'down'."},
+            content={"error": "Direction must be 'up', 'down', or null."},
         )
-    entries = _load_community_board()
-    for entry in entries:
-        if entry["id"] == req.entry_id:
-            if req.direction == "up":
-                entry["upvotes"] = entry.get("upvotes", 0) + 1
-            else:
-                entry["downvotes"] = entry.get("downvotes", 0) + 1
-            _save_community_board(entries)
-            return {
-                "upvotes": entry["upvotes"],
-                "downvotes": entry["downvotes"],
-                "score": entry["upvotes"] - entry["downvotes"],
-            }
-    return JSONResponse(status_code=404, content={"error": "Entry not found."})
+    if req.previous not in valid_directions:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Previous must be 'up', 'down', or null."},
+        )
+
+    client_ip = request.client.host if request.client else "unknown"
+    if _rate_limiter.is_rate_limited(client_ip, MAX_VOTES_PER_HOUR, 3600):
+        return JSONResponse(
+            status_code=429,
+            content={"error": "Easy on the votes! Try again later."},
+        )
+
+    result = _community_db.vote(req.entry_id, req.direction, req.previous)
+    if result is None:
+        return JSONResponse(status_code=404, content={"error": "Entry not found."})
+
+    _rate_limiter.record_request(client_ip)
+    return result
 
 
 @app.get("/api/health")

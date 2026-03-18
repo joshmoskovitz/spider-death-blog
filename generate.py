@@ -17,8 +17,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-import anthropic
 from dotenv import load_dotenv
+
+from costs import TrackedClient
 
 PROJECT_DIR = Path(__file__).parent
 load_dotenv(PROJECT_DIR / ".env")
@@ -47,15 +48,13 @@ def load_style_bible():
         return f.read()
 
 
-def build_prompt(archive, style_bible, count):
-    # Summarize what's already been done so the model avoids repeats
+def build_task_prompt(archive, count):
+    """Build the task-specific user prompt (style bible is sent as a cached system block)."""
     used_settings = [p["setting"] for p in archive]
     used_mechanisms = [p["mechanism"] for p in archive]
     used_props = [p["main_prop"] for p in archive]
 
-    return f"""{style_bible}
-
-EXISTING POSTS (do NOT repeat these settings, mechanisms, or props):
+    return f"""EXISTING POSTS (do NOT repeat these settings, mechanisms, or props):
 - Settings used: {", ".join(used_settings)}
 - Mechanisms used: {", ".join(used_mechanisms)}
 - Main props used: {", ".join(used_props)}
@@ -79,13 +78,16 @@ Output ONLY a JSON array of {count} objects. No other text."""
 def generate_batch(count):
     archive = load_archive()
     style_bible = load_style_bible()
-    prompt = build_prompt(archive, style_bible, count)
+    task_prompt = build_task_prompt(archive, count)
 
-    client = anthropic.Anthropic()
+    client = TrackedClient()
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}],
+        system=[
+            {"type": "text", "text": style_bible, "cache_control": {"type": "ephemeral"}},
+        ],
+        messages=[{"role": "user", "content": task_prompt}],
     )
 
     response_text = message.content[0].text
