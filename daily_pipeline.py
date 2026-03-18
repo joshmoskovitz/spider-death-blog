@@ -49,16 +49,20 @@ def check_budget():
     from costs import daily_total, monthly_total
 
     daily_limit = os.environ.get("DAILY_BUDGET")
-    if daily_limit and daily_total() >= float(daily_limit) * 0.9:
-        raise RuntimeError(
-            f"Near daily budget: ${daily_total():.2f} / ${daily_limit}"
-        )
+    if daily_limit:
+        spent = daily_total()
+        if spent >= float(daily_limit) * 0.9:
+            raise RuntimeError(
+                f"Near daily budget: ${spent:.2f} / ${daily_limit}"
+            )
 
     monthly_limit = os.environ.get("MONTHLY_BUDGET")
-    if monthly_limit and monthly_total() >= float(monthly_limit) * 0.9:
-        raise RuntimeError(
-            f"Near monthly budget: ${monthly_total():.2f} / ${monthly_limit}"
-        )
+    if monthly_limit:
+        spent = monthly_total()
+        if spent >= float(monthly_limit) * 0.9:
+            raise RuntimeError(
+                f"Near monthly budget: ${spent:.2f} / ${monthly_limit}"
+            )
 
 
 def generate_concept():
