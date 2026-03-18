@@ -49,6 +49,8 @@ def load_all_posts():
         })
 
     # New drafts — use only the latest batch file (most recent generation)
+    # Skip any drafts already in the archive (by setting name)
+    archived_settings = {p["setting"].lower() for p in posts}
     next_id = max(p["id"] for p in posts) + 1
     batch_files = sorted(DRAFTS_DIR.glob("batch_*.json"))
     if batch_files:
@@ -57,6 +59,9 @@ def load_all_posts():
             drafts = json.load(f)
         for i, d in enumerate(drafts):
             setting_slug = d.get("setting", "scene").replace(" ", "_")
+            # Skip already-archived posts
+            if d.get("setting", "").lower() in archived_settings:
+                continue
             # Find matching rendered image
             draft_num = i + 1
             png_name = f"draft_{draft_num}_{setting_slug}.png"
@@ -1049,14 +1054,12 @@ function renderCard(entry, rank) {
       '<div class="card-hashtags">' + escapeHtml(entry.hashtags || '') + '</div>' +
       '<div class="card-votes">' +
         '<button class="vote-btn' + (voted === 'up' ? ' voted' : '') + '" ' +
-          'onclick="vote(\\'' + entry.id + '\\', \\'up\\', this)" ' +
-          (voted ? 'disabled' : '') + '>' +
+          'onclick="vote(\\'' + entry.id + '\\', \\'up\\', this)">' +
           '&#x1F44D;' +
         '</button>' +
         '<span class="vote-score" id="score-' + entry.id + '">' + score + '</span>' +
         '<button class="vote-btn' + (voted === 'down' ? ' voted' : '') + '" ' +
-          'onclick="vote(\\'' + entry.id + '\\', \\'down\\', this)" ' +
-          (voted ? 'disabled' : '') + '>' +
+          'onclick="vote(\\'' + entry.id + '\\', \\'down\\', this)">' +
           '&#x1F44E;' +
         '</button>' +
       '</div>' +
@@ -1071,25 +1074,30 @@ function escapeHtml(str) {
 }
 
 function vote(entryId, direction, btn) {
-  if (localStorage.getItem('voted_' + entryId)) return;
+  var previous = localStorage.getItem('voted_' + entryId) || null;
+  var newDirection = (previous === direction) ? null : direction;
 
   fetch(API_URL + '/api/community/vote', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ entry_id: entryId, direction: direction })
+    body: JSON.stringify({ entry_id: entryId, direction: newDirection, previous: previous })
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
     if (data.score !== undefined) {
       document.getElementById('score-' + entryId).textContent = data.score;
-      localStorage.setItem('voted_' + entryId, direction);
-      // Disable both buttons in this card
       var card = btn.closest('.community-card');
       var buttons = card.querySelectorAll('.vote-btn');
+      // Clear all voted states
       for (var i = 0; i < buttons.length; i++) {
-        buttons[i].disabled = true;
+        buttons[i].classList.remove('voted');
       }
-      btn.classList.add('voted');
+      if (newDirection) {
+        localStorage.setItem('voted_' + entryId, newDirection);
+        btn.classList.add('voted');
+      } else {
+        localStorage.removeItem('voted_' + entryId);
+      }
     }
   });
 }
