@@ -1,0 +1,32 @@
+name: Deploy API to Fly.io
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server.py'
+      - 'ai_renderer.py'
+      - 'render.py'
+      - 'costs.py'
+      - 'rate_limiter.py'
+      - 'community_db.py'
+      - 'style_bible.txt'
+      - 'requirements.txt'
+      - 'Dockerfile'
+      - 'fly.toml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --remote-only
