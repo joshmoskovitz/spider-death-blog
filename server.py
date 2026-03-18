@@ -273,7 +273,8 @@ class CommunityEntry(BaseModel):
 
 class VoteRequest(BaseModel):
     entry_id: str
-    direction: str = Field(..., description="'up' or 'down'")
+    direction: Optional[str] = Field(None, description="'up', 'down', or null")
+    previous: Optional[str] = Field(None, description="Previous vote to undo: 'up', 'down', or null")
 
 
 @app.post("/api/community/submit")
@@ -311,10 +312,16 @@ async def community_board():
 @app.post("/api/community/vote")
 async def community_vote(req: VoteRequest, request: Request):
     """Vote on a community board entry."""
-    if req.direction not in ("up", "down"):
+    valid_directions = ("up", "down", None)
+    if req.direction not in valid_directions:
         return JSONResponse(
             status_code=400,
-            content={"error": "Direction must be 'up' or 'down'."},
+            content={"error": "Direction must be 'up', 'down', or null."},
+        )
+    if req.previous not in valid_directions:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Previous must be 'up', 'down', or null."},
         )
 
     client_ip = request.client.host if request.client else "unknown"
@@ -324,7 +331,7 @@ async def community_vote(req: VoteRequest, request: Request):
             content={"error": "Easy on the votes! Try again later."},
         )
 
-    result = _community_db.vote(req.entry_id, req.direction)
+    result = _community_db.vote(req.entry_id, req.direction, req.previous)
     if result is None:
         return JSONResponse(status_code=404, content={"error": "Entry not found."})
 

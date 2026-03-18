@@ -126,18 +126,44 @@ class CommunityDB:
             ).fetchall()
             return [dict(row) for row in rows]
 
-    def vote(self, entry_id: str, direction: str) -> Optional[dict]:
-        """Vote on an entry. Returns updated vote counts or None if not found."""
-        if direction not in ("up", "down"):
-            raise ValueError(f"Invalid vote direction: {direction!r} (expected 'up' or 'down')")
-        # Use separate SQL statements rather than f-string interpolation to
-        # avoid any coupling between the validation above and SQL safety.
-        if direction == "up":
-            sql = "UPDATE entries SET upvotes = upvotes + 1 WHERE id = ?"
-        else:
-            sql = "UPDATE entries SET downvotes = downvotes + 1 WHERE id = ?"
+    def vote(self, entry_id: str, direction: Optional[str],
+             previous: Optional[str] = None) -> Optional[dict]:
+        """Vote on an entry, optionally undoing a previous vote.
+
+        direction: "up", "down", or None (to just undo previous)
+        previous:  "up", "down", or None (the user's prior vote to undo)
+
+        Returns updated vote counts or None if entry not found.
+        """
+        valid = ("up", "down", None)
+        if direction not in valid:
+            raise ValueError(f"Invalid vote direction: {direction!r} (expected 'up', 'down', or None)")
+        if previous not in valid:
+            raise ValueError(f"Invalid previous vote: {previous!r} (expected 'up', 'down', or None)")
+
         with self._connect() as conn:
-            conn.execute(sql, (entry_id,))
+            # Undo previous vote
+            if previous == "up":
+                conn.execute(
+                    "UPDATE entries SET upvotes = MAX(0, upvotes - 1) WHERE id = ?",
+                    (entry_id,),
+                )
+            elif previous == "down":
+                conn.execute(
+                    "UPDATE entries SET downvotes = MAX(0, downvotes - 1) WHERE id = ?",
+                    (entry_id,),
+                )
+            # Apply new vote
+            if direction == "up":
+                conn.execute(
+                    "UPDATE entries SET upvotes = upvotes + 1 WHERE id = ?",
+                    (entry_id,),
+                )
+            elif direction == "down":
+                conn.execute(
+                    "UPDATE entries SET downvotes = downvotes + 1 WHERE id = ?",
+                    (entry_id,),
+                )
             conn.row_factory = sqlite3.Row
             row = conn.execute(
                 "SELECT upvotes, downvotes FROM entries WHERE id = ?",

@@ -112,6 +112,7 @@ def archive_post(batch_path, post_data):
 
     # Build the archive entry
     entry = {
+        "id": next_id,
         "setting": post_data.get("setting", ""),
         "mechanism": post_data.get("mechanism", ""),
         "main_prop": post_data.get("main_prop", ""),

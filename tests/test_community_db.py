@@ -99,10 +99,43 @@ class TestVoting:
         assert result is None
 
     def test_invalid_vote_direction_raises(self, db):
-        """Passing anything other than 'up' or 'down' should raise ValueError."""
+        """Passing anything other than 'up', 'down', or None should raise ValueError."""
         result = _submit_entry(db)
         with pytest.raises(ValueError, match="Invalid vote direction"):
             db.vote(result["id"], "sideways")
+
+    def test_invalid_previous_vote_raises(self, db):
+        result = _submit_entry(db)
+        with pytest.raises(ValueError, match="Invalid previous vote"):
+            db.vote(result["id"], "up", previous="sideways")
+
+    def test_toggle_vote_off(self, db):
+        """Voting None with a previous vote should undo that vote."""
+        result = _submit_entry(db)
+        entry_id = result["id"]
+
+        db.vote(entry_id, "up")
+        vote_result = db.vote(entry_id, None, previous="up")
+        assert vote_result["upvotes"] == 0
+        assert vote_result["score"] == 0
+
+    def test_switch_vote(self, db):
+        """Switching from up to down should decrement upvotes and increment downvotes."""
+        result = _submit_entry(db)
+        entry_id = result["id"]
+
+        db.vote(entry_id, "up")
+        vote_result = db.vote(entry_id, "down", previous="up")
+        assert vote_result["upvotes"] == 0
+        assert vote_result["downvotes"] == 1
+        assert vote_result["score"] == -1
+
+    def test_undo_does_not_go_negative(self, db):
+        """Undoing a vote on an entry with zero votes should not go negative."""
+        result = _submit_entry(db)
+        vote_result = db.vote(result["id"], None, previous="up")
+        assert vote_result["upvotes"] == 0
+        assert vote_result["downvotes"] == 0
 
     def test_top_entries_ranked_by_score(self, db):
         """Entries should be sorted by (upvotes - downvotes) descending."""
